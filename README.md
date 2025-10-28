@@ -31,4 +31,4 @@
 1. **Клонирование репозитория**
 ```bash
 git clone <repository-url>
-cd banking-ui-tests
+cd banking-ui-tests 
