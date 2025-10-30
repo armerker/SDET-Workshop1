@@ -1,4 +1,4 @@
-name: Banking UI Tests
+name: Banking Tests
 
 on:
   push:
@@ -6,6 +6,25 @@ on:
       - master
       - main
       - task_ui
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Select test type to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - ui
+        - api
+      browser:
+        description: 'Browser for UI tests'
+        required: false
+        default: 'chromium'
+        type: choice
+        options:
+        - chromium
+        - firefox
 
 permissions:
   contents: write
@@ -29,13 +48,20 @@ jobs:
           pip install pytest-xdist
 
       - name: Install Chromium
+        if: inputs.test_type == 'all' || inputs.test_type == 'ui'
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser chromium-chromedriver
 
-      - name: Run tests in parallel
+      - name: Run selected tests
         run: |
-          python -m pytest tests/ -v -n 3 --alluredir=allure-results
+          if [ "${{ inputs.test_type }}" == "ui" ]; then
+            python -m pytest tests/ui/ -v -n 3 --alluredir=allure-results
+          elif [ "${{ inputs.test_type }}" == "api" ]; then
+            python -m pytest tests/api/ -v --alluredir=allure-results
+          else
+            python -m pytest tests/ -v -n 3 --alluredir=allure-results
+          fi
 
       - name: Get Allure history
         uses: actions/checkout@v4
