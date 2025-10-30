@@ -1,6 +1,9 @@
 name: Banking UI Tests
 
 on:
+  push:
+    branches:
+      - task_ui
   workflow_dispatch:
     inputs:
       test_type:
@@ -40,4 +43,4 @@ jobs:
             python -m pytest tests/ -v
           fi
         env:
-          TEST_TYPE: ${{ inputs.test_type }}
+          TEST_TYPE: ${{ github.event.inputs.test_type || 'all' }}
