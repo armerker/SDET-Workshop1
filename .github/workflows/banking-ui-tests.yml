@@ -114,7 +114,6 @@ jobs:
 
       - name: Read test path
         if: github.event.inputs.test_type == 'specific' && github.event.inputs.test_id != ''
-        id: test_path
         run: |
           TEST_PATH=$(cat test_path.txt)
           echo "TEST_PATH=$TEST_PATH" >> $GITHUB_ENV
