@@ -1,4 +1,4 @@
-name: Banking Tests
+name: Banking UI Tests
 
 on:
   push:
@@ -16,7 +16,6 @@ on:
         options:
           - all
           - ui
-          - api
 
 permissions:
   contents: write
@@ -40,23 +39,13 @@ jobs:
           pip install pytest-xdist
 
       - name: Install Chromium
-        if: ${{ github.event_name == 'push' || inputs.test_type == 'all' || inputs.test_type == 'ui' }}
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser chromium-chromedriver
 
-      - name: Run selected tests
+      - name: Run tests
         run: |
-          if [ "$TEST_TYPE" == "ui" ]; then
-            python -m pytest tests/ -v -n 3 --alluredir=allure-results -m "ui"
-          elif [ "$TEST_TYPE" == "api" ]; then
-            echo "No API tests configured yet"
-            exit 0
-          else
-            python -m pytest tests/ -v -n 3 --alluredir=allure-results
-          fi
-        env:
-          TEST_TYPE: ${{ inputs.test_type }}
+          python -m pytest tests/ -v -n 3 --alluredir=allure-results
 
       - name: Get Allure history
         uses: actions/checkout@v4
