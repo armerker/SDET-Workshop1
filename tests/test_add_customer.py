@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 @allure.feature("Добавление клиента")
 @allure.story("Создание нового клиента в системе")
 class TestAddCustomer:
+    @pytest.mark.ui
     @pytest.mark.smoke
     @allure.title("Тест создания клиента с валидными данными")
     @allure.testcase("TC-001")

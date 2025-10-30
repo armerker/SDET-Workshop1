@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 @allure.feature("Удаление клиента")
 @allure.story("Удаление клиента с длиной имени, близкой к средней")
 class TestDeleteCustomer:
+    @pytest.mark.ui
     @pytest.mark.regression
     @allure.title("Тест удаления клиента с длиной имени, близкой к средней")
     @allure.testcase("TC-003")

@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 @allure.feature("Сортировка клиентов")
 @allure.story("Проверка сортировки клиентов по имени")
 class TestCustomerSorting:
+    @pytest.mark.ui
     @pytest.mark.regression
     @allure.title("Тест сортировки клиентов по имени в алфавитном порядке")
     @allure.testcase("TC-002")
