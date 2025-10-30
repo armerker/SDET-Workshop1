@@ -31,7 +31,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest-xdist
+          pip install pytest-xdist allure-pytest
 
       - name: Install Chromium
         run: |
@@ -48,26 +48,19 @@ jobs:
             python -m pytest tests/ -v -n 3 --alluredir=allure-results
           fi
 
-      - name: Get Allure history
-        uses: actions/checkout@v4
+      - name: Generate Allure Report
         if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Build Allure Report
         uses: simple-elf/allure-report-action@master
-        if: always()
         with:
           allure_results: allure-results
           allure_report: allure-report
-          keep_reports: true
+          keep_reports: 20
 
-      - name: Deploy Allure Report
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Publish Allure Report
         if: always()
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-report
+          force_orphan: true
