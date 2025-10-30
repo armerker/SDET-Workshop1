@@ -1,11 +1,6 @@
 name: Banking UI Tests
 
 on:
-  push:
-    branches:
-      - master
-      - main
-      - task_ui
   workflow_dispatch:
     inputs:
       test_type:
@@ -17,17 +12,6 @@ on:
           - all
           - ui
           - api
-      browser:
-        description: 'Browser for UI tests'
-        required: false
-        default: 'chromium'
-        type: choice
-        options:
-          - chromium
-          - firefox
-
-permissions:
-  contents: write
 
 jobs:
   test:
@@ -45,46 +29,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest-xdist
-
-      - name: Install Chromium
-        if: ${{ github.event_name == 'push' || inputs.test_type == 'all' || inputs.test_type == 'ui' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y chromium-browser chromium-chromedriver
 
       - name: Run selected tests
         run: |
           if [ "$TEST_TYPE" == "ui" ]; then
-            python -m pytest tests/ -v -n 3 --alluredir=allure-results -m "ui"
+            python -m pytest tests/ -v -m "ui"
           elif [ "$TEST_TYPE" == "api" ]; then
-            python -m pytest tests/ -v --alluredir=allure-results -m "api"
+            python -m pytest tests/ -v -m "api"
           else
-            python -m pytest tests/ -v -n 3 --alluredir=allure-results
+            python -m pytest tests/ -v
           fi
         env:
           TEST_TYPE: ${{ inputs.test_type }}
-
-      - name: Get Allure history
-        uses: actions/checkout@v4
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Build Allure Report
-        uses: simple-elf/allure-report-action@master
-        if: always()
-        with:
-          allure_results: allure-results
-          allure_report: allure-report
-          keep_reports: true
-
-      - name: Deploy Allure Report to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        if: always()
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: allure-report
