@@ -2,8 +2,7 @@ name: Banking UI Tests
 
 on:
   push:
-    branches:
-      - task_ui
+    branches: [task_ui]
   workflow_dispatch:
     inputs:
       test_type:
@@ -33,14 +32,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run selected tests
+      - name: Run tests
         run: |
-          if [ "$TEST_TYPE" == "ui" ]; then
-            python -m pytest tests/ -v -m "ui"
-          elif [ "$TEST_TYPE" == "api" ]; then
-            python -m pytest tests/ -v -m "api"
+          if [ "${{ github.event.inputs.test_type || 'all' }}" == "ui" ]; then
+            pytest tests/ -v -m "ui"
+          elif [ "${{ github.event.inputs.test_type || 'all' }}" == "api" ]; then
+            pytest tests/ -v -m "api"
           else
-            python -m pytest tests/ -v
+            pytest tests/ -v
           fi
-        env:
-          TEST_TYPE: ${{ github.event.inputs.test_type || 'all' }}
