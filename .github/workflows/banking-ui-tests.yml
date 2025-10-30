@@ -4,17 +4,6 @@ on:
   push:
     branches: [task_ui]
   workflow_dispatch:
-    inputs:
-      test_type:
-        description: 'Select test type to run'
-        required: true
-        default: 'all'
-        type: choice
-        options:
-          - all
-          - ui
-          - api
-
 jobs:
   test:
     runs-on: ubuntu-latest
