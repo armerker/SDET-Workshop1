@@ -3,7 +3,6 @@ name: Banking UI Tests
 on:
   push:
     branches: [main, master, task_ui]
-
   workflow_dispatch:
     inputs:
       test_type:
@@ -41,8 +40,13 @@ jobs:
 
       - name: Run tests
         run: |
-          echo "Running ${{ inputs.test_type }} tests"
-          python -m pytest tests/ -v -n 3 --alluredir=allure-results
+          if [ "${{ github.event.inputs.test_type || 'all' }}" == "ui" ]; then
+            python -m pytest tests/ -v -n 3 --alluredir=allure-results -m "ui"
+          elif [ "${{ github.event.inputs.test_type || 'all' }}" == "api" ]; then
+            python -m pytest tests/ -v --alluredir=allure-results -m "api"
+          else
+            python -m pytest tests/ -v -n 3 --alluredir=allure-results
+          fi
 
       - name: Get Allure history
         uses: actions/checkout@v4
