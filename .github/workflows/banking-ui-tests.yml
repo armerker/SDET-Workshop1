@@ -17,6 +17,12 @@ on:
         - all
         - ui
         - api
+        - specific
+      test_name:
+        description: 'Specific test name to run (for specific type)'
+        required: false
+        default: ''
+        type: string
       browser:
         description: 'Browser for UI tests'
         required: false
@@ -46,20 +52,33 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest-xdist
+
       - name: Install Chromium
-        if: inputs.test_type == 'all' || inputs.test_type == 'ui'
+        if: ${{ github.event.inputs.test_type == 'ui' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'specific' || github.event_name == 'push' }}
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser chromium-chromedriver
+
       - name: Run selected tests
         run: |
-          if [ "${{ inputs.test_type }}" == "ui" ]; then
+          if [ "$TEST_TYPE" == "ui" ]; then
+            echo "Running UI tests in parallel"
             python -m pytest tests/ui/ -v -n 3 --alluredir=allure-results
-          elif [ "${{ inputs.test_type }}" == "api" ]; then
+          elif [ "$TEST_TYPE" == "api" ]; then
+            echo "Running API tests sequentially"
             python -m pytest tests/api/ -v --alluredir=allure-results
+          elif [ "$TEST_TYPE" == "specific" ] && [ -n "$TEST_NAME" ]; then
+            echo "Running specific test: $TEST_NAME"
+            python -m pytest "$TEST_NAME" -v --alluredir=allure-results
           else
+            echo "Running all tests in parallel"
             python -m pytest tests/ -v -n 3 --alluredir=allure-results
           fi
+        env:
+          TEST_TYPE: ${{ github.event.inputs.test_type || 'all' }}
+          TEST_NAME: ${{ github.event.inputs.test_name || '' }}
+          BROWSER: ${{ github.event.inputs.browser || 'chromium' }}
+
       - name: Get Allure history
         uses: actions/checkout@v4
         if: always()
