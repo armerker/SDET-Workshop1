@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - main
+      - task_ui
 
 permissions:
   contents: write
