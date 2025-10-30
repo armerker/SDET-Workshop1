@@ -16,6 +16,15 @@ on:
         options:
           - all
           - ui
+          - api
+      browser:
+        description: 'Browser for UI tests'
+        required: false
+        default: 'chromium'
+        type: choice
+        options:
+          - chromium
+          - firefox
 
 permissions:
   contents: write
@@ -39,13 +48,22 @@ jobs:
           pip install pytest-xdist
 
       - name: Install Chromium
+        if: ${{ github.event_name == 'push' || inputs.test_type == 'all' || inputs.test_type == 'ui' }}
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser chromium-chromedriver
 
-      - name: Run tests
+      - name: Run selected tests
         run: |
-          python -m pytest tests/ -v -n 3 --alluredir=allure-results
+          if [ "$TEST_TYPE" == "ui" ]; then
+            python -m pytest tests/ -v -n 3 --alluredir=allure-results -m "ui"
+          elif [ "$TEST_TYPE" == "api" ]; then
+            python -m pytest tests/ -v --alluredir=allure-results -m "api"
+          else
+            python -m pytest tests/ -v -n 3 --alluredir=allure-results
+          fi
+        env:
+          TEST_TYPE: ${{ inputs.test_type }}
 
       - name: Get Allure history
         uses: actions/checkout@v4
