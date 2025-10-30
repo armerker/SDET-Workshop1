@@ -1,53 +1,48 @@
-name: Banking UI Tests
+name: Banking UI Tests CI/CD
 
 on:
-  workflow_dispatch:
-    inputs:
-      test-type:
-        description: 'Type of tests to run'
-        required: true
-        default: 'all'
-        type: choice
-        options:
-        - all
-        - smoke
-        - add-customer
-        - sorting
-        - delete-customer
-
-      parallel-mode:
-        description: 'Execution mode'
-        required: true
-        default: 'parallel'
-        type: choice
-        options:
-        - parallel
-        - sequential
-
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      test-tags:
+        description: 'Pytest tags to run (e.g., smoke, regression)'
+        required: false
+        type: string
+        default: ''
+      browser-mode:
+        description: 'Browser visibility mode'
+        required: true
+        default: 'headless'
+        type: choice
+        options:
+        - headless
+        - headed
+      extra-args:
+        description: 'Extra pytest arguments'
+        required: false
+        type: string
+        default: '-v -s'
 
 jobs:
   tests:
     runs-on: ubuntu-latest
-    name: Run tests
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Python
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: "3.10"
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        echo "Dependencies installed"
 
     - name: Install Chrome
       run: |
@@ -62,64 +57,12 @@ jobs:
 
     - name: Run tests
       run: |
-        TEST_TYPE="${{ github.event.inputs.test-type || 'all' }}"
-        PARALLEL="${{ github.event.inputs.parallel-mode || 'parallel' }}"
-        
-        CMD="pytest -v --alluredir=allure-results"
-        
-        case $TEST_TYPE in
-          "smoke")
-            CMD="$CMD -m smoke"
-            ;;
-          "add-customer")
-            CMD="$CMD tests/test_add_customer.py"
-            ;;
-          "sorting")
-            CMD="$CMD tests/test_customer_sorting.py"
-            ;;
-          "delete-customer")
-            CMD="$CMD tests/test_delete_customer.py"
-            ;;
-        esac
-        
-        if [ "$PARALLEL" = "parallel" ] && [ "$TEST_TYPE" = "all" ]; then
-          CMD="$CMD -n 3"
-        fi
-        
-        echo "Running: $CMD"
-        eval $CMD
+        pytest tests/ ${{ github.event.inputs.extra-args }} --alluredir=allure-results
 
-    - name: Generate Allure report
-      if: always()
-      run: |
-        echo "Generating Allure report..."
-        allure generate allure-results -o allure-report --clean
-        echo "Report generated!"
-
-    - name: Upload report
-      if: always()
+    - name: Upload test results
       uses: actions/upload-artifact@v4
-      with:
-        name: allure-report-${{ github.run_number }}
-        path: allure-report/
-        retention-days: 30
-
-    - name: Create direct download link
       if: always()
-      run: |
-        echo ""
-        echo "TESTS COMPLETED!"
-        echo "========================"
-        echo "Test Type: ${{ github.event.inputs.test-type || 'all' }}"
-        echo "Mode: ${{ github.event.inputs.parallel-mode || 'parallel' }}"
-        echo "Run: #${{ github.run_number }}"
-        echo ""
-        echo "DIRECT REPORT LINK:"
-        echo "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-        echo ""
-        echo "HOW TO VIEW REPORT:"
-        echo "1. Click the link above"
-        echo "2. Scroll down to 'Artifacts' section"
-        echo "3. Click 'allure-report-${{ github.run_number }}'"
-        echo "4. Download and open index.html"
-        echo "========================"
+      with:
+        name: allure-results
+        path: allure-results
+        retention-days: 30
