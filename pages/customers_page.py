@@ -46,11 +46,11 @@ class CustomersPage(BasePage):
             try:
                 first_name_cell = row.find_element(*self.FIRST_NAME_CELL)
                 if first_name_cell.text == name:
-                    # Находим кнопку удаления в той же строке
-                    delete_btn = row.find_element(*self.DELETE_BUTTONS)
+                    delete_btn = row.find_element(By.XPATH, ".//button[contains(text(),'Delete')]")
                     delete_btn.click()
                     return True
-            except Exception:
+            except Exception as e:
+                print(f"Ошибка при удалении клиента {name}: {e}")
                 continue
 
         return False

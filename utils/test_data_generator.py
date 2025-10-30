@@ -30,12 +30,28 @@ class TestDataGenerator:
 
     @staticmethod
     def find_closest_to_average_name(names):
-        """Находит имя с длиной, наиболее близкой к средней"""
+        """Находит имя с длиной, наиболее близкой к средней, исключая короткие имена"""
         if not names:
             return None
 
         lengths = [len(name) for name in names]
         average_length = sum(lengths) / len(lengths)
 
-        closest_name = min(names, key=lambda name: abs(len(name) - average_length))
-        return closest_name
+        # Фильтруем слишком короткие имена (меньше 4 символов)
+        filtered_names = [name for name in names if len(name) >= 4]
+
+        if not filtered_names:
+            filtered_names = names
+
+        # Находим 3 самых близких к среднему
+        closest_names = sorted(filtered_names, key=lambda name: abs(len(name) - average_length))[:3]
+
+        # Выбираем случайного из ближайших
+        return random.choice(closest_names)
+
+    @staticmethod
+    def find_random_customer(names):
+        """Выбирает случайного клиента для удаления"""
+        if not names:
+            return None
+        return random.choice(names)
