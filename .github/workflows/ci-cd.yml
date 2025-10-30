@@ -27,23 +27,29 @@ on:
         default: '-v -s'
 
 jobs:
-  tests:
+  individual-tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+        test-file:
+          - test_add_customer.py
+          - test_customer_sorting.py
+          - test_delete_customer.py
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
-        python-version: "3.10"
+        python-version: ${{ matrix.python-version }}
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-
     - name: Install Chrome
       run: |
         sudo apt-get update
@@ -54,15 +60,87 @@ jobs:
         sudo apt-get install -y google-chrome-stable
         echo "Chrome installed:"
         google-chrome --version
-
-    - name: Run tests
+    - name: Run individual test - ${{ matrix.test-file }}
       run: |
-        pytest tests/ ${{ github.event.inputs.extra-args }} --alluredir=allure-results
-
-    - name: Upload test results
+        pytest tests/${{ matrix.test-file }} ${{ github.event.inputs.extra-args }} --alluredir=allure-results-individual-${{ matrix.python-version }}-${{ matrix.test-file }}
+    - name: Upload individual allure results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: allure-results
-        path: allure-results
+        name: allure-individual-${{ matrix.python-version }}-${{ matrix.test-file }}
+        path: allure-results-individual-${{ matrix.python-version }}-${{ matrix.test-file }}
+        retention-days: 30
+
+  parallel-tests:
+    runs-on: ubuntu-latest
+    needs: individual-tests
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+        shard: [1, 2, 3]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest-xdist
+    - name: Install Chrome
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+    - name: Run all tests in parallel
+      run: |
+        pytest ${{ github.event.inputs.extra-args }} -n 3 --alluredir=allure-results-parallel-${{ matrix.python-version }}-${{ matrix.shard }}
+    - name: Upload parallel allure results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-parallel-${{ matrix.python-version }}-${{ matrix.shard }}
+        path: allure-results-parallel-${{ matrix.python-version }}-${{ matrix.shard }}
+        retention-days: 30
+
+  upload-reports:
+    runs-on: ubuntu-latest
+    needs: [individual-tests, parallel-tests]
+    if: always()
+
+    steps:
+    - name: Download all allure results
+      uses: actions/download-artifact@v4
+      with:
+        path: allure-results-combined
+        pattern: allure-*
+        merge-multiple: true
+
+    - name: List downloaded files
+      run: |
+        echo "=== Downloaded artifacts ==="
+        find allure-results-combined -type f -name "*.json" | head -10
+        echo "Total JSON files:"
+        find allure-results-combined -type f -name "*.json" | wc -l
+    - name: Generate combined allure report
+      uses: simple-elf/allure-report-action@master
+      with:
+        allure_results: allure-results-combined
+        allure_report: allure-report-final
+        keep_reports: true
+
+    - name: Upload final report
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-report-final-${{ github.run_id }}
+        path: allure-report-final
         retention-days: 30
