@@ -5,6 +5,26 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      test-tags:
+        description: 'Pytest tags to run (e.g., smoke, regression)'
+        required: false
+        type: string
+        default: ''
+      browser-mode:
+        description: 'Browser visibility mode'
+        required: true
+        default: 'headless'
+        type: choice
+        options:
+        - headless
+        - headed
+      extra-args:
+        description: 'Extra pytest arguments'
+        required: false
+        type: string
+        default: '-v -s'
 
 jobs:
   test:
@@ -33,9 +53,17 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable
 
+    - name: Show run parameters
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        echo "Manual run parameters:"
+        echo "Test tags: ${{ github.event.inputs.test-tags }}"
+        echo "Browser mode: ${{ github.event.inputs.browser-mode }}"
+        echo "Extra args: ${{ github.event.inputs.extra-args }}"
+
     - name: Run tests with Allure
       run: |
-        pytest -v -s --alluredir=allure-results
+        pytest ${{ github.event.inputs.extra-args }} --alluredir=allure-results ${{ github.event.inputs.test-tags && format('-m {0}', github.event.inputs.test-tags) || '' }}
 
     - name: Generate Allure report
       uses: simple-elf/allure-report-action@master
