@@ -1,12 +1,15 @@
-name: Banking UI Tests
+name: Banking Tests
 
 on:
   push:
-    branches: [main, master, task_ui]
+    branches:
+      - master
+      - main
+      - task_ui
   workflow_dispatch:
     inputs:
       test_type:
-        description: 'What tests to run?'
+        description: 'Select test type to run'
         required: true
         default: 'all'
         type: choice
@@ -14,6 +17,17 @@ on:
         - all
         - ui
         - api
+      browser:
+        description: 'Browser for UI tests'
+        required: false
+        default: 'chromium'
+        type: choice
+        options:
+        - chromium
+        - firefox
+
+permissions:
+  contents: write
 
 jobs:
   test:
@@ -31,36 +45,41 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest-xdist allure-pytest
-
+          pip install pytest-xdist
       - name: Install Chromium
+        if: inputs.test_type == 'all' || inputs.test_type == 'ui'
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser chromium-chromedriver
-
-      - name: Run tests
+      - name: Run selected tests
         run: |
-          if [ "${{ github.event.inputs.test_type || 'all' }}" == "ui" ]; then
-            python -m pytest tests/ -v -n 3 --alluredir=allure-results -m "ui"
-          elif [ "${{ github.event.inputs.test_type || 'all' }}" == "api" ]; then
-            python -m pytest tests/ -v --alluredir=allure-results -m "api"
+          if [ "${{ inputs.test_type }}" == "ui" ]; then
+            python -m pytest tests/ui/ -v -n 3 --alluredir=allure-results
+          elif [ "${{ inputs.test_type }}" == "api" ]; then
+            python -m pytest tests/api/ -v --alluredir=allure-results
           else
             python -m pytest tests/ -v -n 3 --alluredir=allure-results
           fi
-
-      - name: Generate Allure Report
+      - name: Get Allure history
+        uses: actions/checkout@v4
         if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Build Allure Report
         uses: simple-elf/allure-report-action@master
+        if: always()
         with:
           allure_results: allure-results
           allure_report: allure-report
-          keep_reports: 20
+          keep_reports: true
 
-      - name: Publish Allure Report
-        if: always()
+      - name: Deploy Allure Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
+        if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-report
-          force_orphan: true
