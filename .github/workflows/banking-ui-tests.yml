@@ -56,13 +56,48 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest-xdist
+          pip install pytest-xdist allure-pytest
 
       - name: Install Chromium
         if: ${{ github.event.inputs.test_type == 'ui' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'specific' || github.event_name == 'push' }}
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser chromium-chromedriver
+
+      - name: Find test by ID
+        if: github.event.inputs.test_type == 'specific' && github.event.inputs.test_id != ''
+        id: find_test
+        run: |
+          echo "=== Searching for test with ID: ${{ github.event.inputs.test_id }} ==="
+          TEST_PATH=$(python -c "
+          import os
+          import re
+          import sys
+          
+          test_id = '${{ github.event.inputs.test_id }}'
+          found_tests = []
+          
+          for root, dirs, files in os.walk('tests'):
+              for file in files:
+                  if file.endswith('.py'):
+                      filepath = os.path.join(root, file)
+                      with open(filepath, 'r') as f:
+                          content = f.read()
+                          # Ищем allure.testcase с нужным ID
+                          pattern = r'@allure\.testcase\(\s*[\"\\']' + re.escape(test_id) + r'[\"\\']\s*\)\s*\n\s*def\s+(\w+)'
+                          matches = re.findall(pattern, content)
+                          if matches:
+                              for test_func in matches:
+                                  found_tests.append(f'{filepath}::{test_func}')
+          
+          if found_tests:
+              print('Found tests:', found_tests)
+              print('::set-output name=test_path::' + found_tests[0])
+          else:
+              print('Test not found')
+              sys.exit(1)
+          ")
+          echo "Test path: $TEST_PATH"
 
       - name: Run selected tests
         run: |
@@ -74,7 +109,8 @@ jobs:
             python -m pytest tests/ -v -m "api" --alluredir=allure-results
           elif [ "$TEST_TYPE" == "specific" ] && [ -n "$TEST_ID" ]; then
             echo "Running test with ID: $TEST_ID"
-            python -m pytest tests/ -v -k "$TEST_ID" --alluredir=allure-results
+            # Используем найденный путь к тесту
+            python -m pytest "$TEST_PATH" -v --alluredir=allure-results
           elif [ "$TEST_TYPE" == "specific" ] && [ -n "$TEST_NAME" ]; then
             echo "Running specific test: $TEST_NAME"
             python -m pytest "$TEST_NAME" -v --alluredir=allure-results
@@ -87,22 +123,18 @@ jobs:
           TEST_NAME: ${{ github.event.inputs.test_name || '' }}
           TEST_ID: ${{ github.event.inputs.test_id || '' }}
           BROWSER: ${{ github.event.inputs.browser || 'chromium' }}
+          TEST_PATH: ${{ steps.find_test.outputs.test_path }}
 
-      - name: Get Allure history
-        uses: actions/checkout@v4
+      - name: List allure results
         if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
+        run: |
+          echo "Allure results content:"
+          ls -la allure-results/ || echo "No allure-results directory"
 
-      - name: Build Allure Report
-        uses: simple-elf/allure-report-action@master
+      - name: Generate Allure Report
         if: always()
-        with:
-          allure_results: allure-results
-          allure_report: allure-report
-          keep_reports: true
+        run: |
+          allure generate allure-results -o allure-report --clean
 
       - name: Deploy Allure Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -111,3 +143,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-report
+          force_orphan: true
