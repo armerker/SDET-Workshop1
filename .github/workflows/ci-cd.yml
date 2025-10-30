@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       test-type:
-        description: '📊 Type of tests to run'
+        description: 'Type of tests to run'
         required: true
         default: 'all'
         type: choice
@@ -16,7 +16,7 @@ on:
         - delete-customer
 
       parallel-mode:
-        description: '⚡ Execution mode'
+        description: 'Execution mode'
         required: true
         default: 'parallel'
         type: choice
@@ -32,7 +32,7 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
-    name: 'Run ${{ github.event.inputs.test-type || 'all' }} tests'
+    name: Run tests
 
     steps:
     - name: Checkout code
