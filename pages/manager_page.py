@@ -25,11 +25,16 @@ class ManagerPage(BasePage):
         self.click(self.CUSTOMERS_BTN)
 
     def add_customer(self, first_name, last_name, post_code):
+
         self.click_add_customer()
+
+        # Ждем появления формы
+        self.find_element(self.FIRST_NAME_INPUT)
+
         self.send_keys(self.FIRST_NAME_INPUT, first_name)
         self.send_keys(self.LAST_NAME_INPUT, last_name)
         self.send_keys(self.POST_CODE_INPUT, post_code)
         self.click(self.ADD_CUSTOMER_SUBMIT_BTN)
 
-        # Получаем текст alert'а
+
         return self.get_alert_text()
