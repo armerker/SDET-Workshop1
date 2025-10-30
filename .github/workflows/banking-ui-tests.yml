@@ -19,7 +19,12 @@ on:
         - api
         - specific
       test_name:
-        description: 'Specific test name to run (for specific type)'
+        description: 'Specific test name, class or file to run'
+        required: false
+        default: ''
+        type: string
+      test_id:
+        description: 'Test ID (like TC-001) to run'
         required: false
         default: ''
         type: string
@@ -62,11 +67,14 @@ jobs:
       - name: Run selected tests
         run: |
           if [ "$TEST_TYPE" == "ui" ]; then
-            echo "Running UI tests in parallel"
-            python -m pytest tests/ui/ -v -n 3 --alluredir=allure-results
+            echo "Running UI tests with marker 'ui' in parallel"
+            python -m pytest tests/ -v -n 3 -m "ui" --alluredir=allure-results
           elif [ "$TEST_TYPE" == "api" ]; then
-            echo "Running API tests sequentially"
-            python -m pytest tests/api/ -v --alluredir=allure-results
+            echo "Running API tests with marker 'api' sequentially"
+            python -m pytest tests/ -v -m "api" --alluredir=allure-results
+          elif [ "$TEST_TYPE" == "specific" ] && [ -n "$TEST_ID" ]; then
+            echo "Running test with ID: $TEST_ID"
+            python -m pytest tests/ -v -k "$TEST_ID" --alluredir=allure-results
           elif [ "$TEST_TYPE" == "specific" ] && [ -n "$TEST_NAME" ]; then
             echo "Running specific test: $TEST_NAME"
             python -m pytest "$TEST_NAME" -v --alluredir=allure-results
@@ -77,6 +85,7 @@ jobs:
         env:
           TEST_TYPE: ${{ github.event.inputs.test_type || 'all' }}
           TEST_NAME: ${{ github.event.inputs.test_name || '' }}
+          TEST_ID: ${{ github.event.inputs.test_id || '' }}
           BROWSER: ${{ github.event.inputs.browser || 'chromium' }}
 
       - name: Get Allure history
