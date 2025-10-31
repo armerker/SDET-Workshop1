@@ -80,37 +80,21 @@ jobs:
         if: github.event.inputs.test_type == 'specific' && github.event.inputs.test_id != ''
         id: find_test
         run: |
-          echo "=== Searching for test with ID: ${{ github.event.inputs.test_id }} ==="
-          python -c "
-          import os
-          import re
+          echo "=== Mapping test IDs to actual paths ==="
           
-          test_id = '${{ github.event.inputs.test_id }}'
-          found_tests = []
+          if [ '${{ github.event.inputs.test_id }}' == "TC-001" ]; then
+            echo "tests/test_add_customer.py::TestAddCustomer::test_add_customer_with_valid_data" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' == "TC-002" ]; then
+            echo "tests/test_customer_sorting.py::TestCustomerSorting::test_sort_customers_by_first_name" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' == "TC-003" ]; then
+            echo "tests/test_delete_customer.py::TestDeleteCustomer::test_delete_customer_closest_to_average_name_length" > test_path.txt
+          else
+            echo "Unknown test ID: ${{ github.event.inputs.test_id }}"
+            exit 1
+          fi
           
-          for root, dirs, files in os.walk('tests'):
-              for file in files:
-                  if file.endswith('.py'):
-                      filepath = os.path.join(root, file)
-                      with open(filepath, 'r', encoding='utf-8') as f:
-                          content = f.read()
-                          # Ищем allure.testcase с нужным ID
-                          pattern = r'@allure\.testcase\(\s*[\"\\']' + re.escape(test_id) + r'[\"\\']\s*\)\s*\n\s*def\s+(\w+)'
-                          matches = re.findall(pattern, content)
-                          if matches:
-                              for test_func in matches:
-                                  full_path = f'{filepath}::{test_func}'
-                                  found_tests.append(full_path)
-                                  print(f'Found: {full_path}')
-          
-          if found_tests:
-              with open('test_path.txt', 'w') as f:
-                  f.write(found_tests[0])
-              print('Test path saved to file')
-          else:
-              print('Test not found')
-              exit(1)
-          "
+          TEST_PATH=$(cat test_path.txt)
+          echo "Mapped to: $TEST_PATH"
 
       - name: Read test path
         if: github.event.inputs.test_type == 'specific' && github.event.inputs.test_id != ''
