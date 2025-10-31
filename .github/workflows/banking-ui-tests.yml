@@ -1,0 +1,148 @@
+name: Banking Tests
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - task_ui
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Select test type to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - ui
+        - api
+        - specific
+      test_name:
+        description: 'Specific test name, class or file to run'
+        required: false
+        default: ''
+        type: string
+      test_id:
+        description: 'Test ID (like TC-001) to run'
+        required: false
+        default: ''
+        type: string
+      browser:
+        description: 'Browser for UI tests'
+        required: false
+        default: 'chromium'
+        type: choice
+        options:
+        - chromium
+        - firefox
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Java (required for Allure)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jre
+
+      - name: Install Allure Commandline
+        run: |
+          sudo wget https://github.com/allure-framework/allure2/releases/download/2.24.0/allure-2.24.0.tgz
+          sudo tar -zxvf allure-2.24.0.tgz -C /opt/
+          sudo ln -s /opt/allure-2.24.0/bin/allure /usr/bin/allure
+          allure --version
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-xdist allure-pytest
+
+      - name: Install Chromium
+        if: ${{ github.event.inputs.test_type == 'ui' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'specific' || github.event_name == 'push' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser chromium-chromedriver
+
+      - name: Find test by ID
+        if: github.event.inputs.test_type == 'specific' && github.event.inputs.test_id != ''
+        id: find_test
+        run: |
+          echo "=== Mapping test IDs to actual paths ==="
+          
+          if [ '${{ github.event.inputs.test_id }}' == "TC-001" ]; then
+            echo "tests/test_add_customer.py::TestAddCustomer::test_add_customer_with_valid_data" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' == "TC-002" ]; then
+            echo "tests/test_customer_sorting.py::TestCustomerSorting::test_sort_customers_by_first_name" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' == "TC-003" ]; then
+            echo "tests/test_delete_customer.py::TestDeleteCustomer::test_delete_customer_closest_to_average_name_length" > test_path.txt
+          else
+            echo "Unknown test ID: ${{ github.event.inputs.test_id }}"
+            exit 1
+          fi
+          
+          TEST_PATH=$(cat test_path.txt)
+          echo "Mapped to: $TEST_PATH"
+
+      - name: Read test path
+        if: github.event.inputs.test_type == 'specific' && github.event.inputs.test_id != ''
+        run: |
+          TEST_PATH=$(cat test_path.txt)
+          echo "TEST_PATH=$TEST_PATH" >> $GITHUB_ENV
+          echo "Test path: $TEST_PATH"
+
+      - name: Run selected tests
+        run: |
+          if [ "$TEST_TYPE" == "ui" ]; then
+            echo "Running UI tests with marker 'ui' in parallel"
+            python -m pytest tests/ -v -n 3 -m "ui" --alluredir=allure-results
+          elif [ "$TEST_TYPE" == "api" ]; then
+            echo "Running API tests with marker 'api' sequentially"
+            python -m pytest tests/ -v -m "api" --alluredir=allure-results
+          elif [ "$TEST_TYPE" == "specific" ] && [ -n "$TEST_ID" ] && [ -n "$TEST_PATH" ]; then
+            echo "Running test with ID: $TEST_ID"
+            python -m pytest "$TEST_PATH" -v --alluredir=allure-results
+          elif [ "$TEST_TYPE" == "specific" ] && [ -n "$TEST_NAME" ]; then
+            echo "Running specific test: $TEST_NAME"
+            python -m pytest "$TEST_NAME" -v --alluredir=allure-results
+          else
+            echo "Running all tests in parallel"
+            python -m pytest tests/ -v -n 3 --alluredir=allure-results
+          fi
+        env:
+          TEST_TYPE: ${{ github.event.inputs.test_type || 'all' }}
+          TEST_NAME: ${{ github.event.inputs.test_name || '' }}
+          TEST_ID: ${{ github.event.inputs.test_id || '' }}
+          BROWSER: ${{ github.event.inputs.browser || 'chromium' }}
+
+      - name: List allure results
+        if: always()
+        run: |
+          echo "Allure results content:"
+          ls -la allure-results/ || echo "No allure-results directory"
+
+      - name: Generate Allure Report
+        if: always()
+        run: |
+          allure generate allure-results -o allure-report --clean
+
+      - name: Deploy Allure Report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-report
+          force_orphan: true
