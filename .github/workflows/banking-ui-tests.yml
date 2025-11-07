@@ -81,7 +81,8 @@ jobs:
           git clone https://github.com/bondarenkokate73/simbirsoft_sdet_project api-service
           cd api-service
           echo "Starting API service with Docker Compose..."
-          docker-compose up --build -d
+          # Используем новый синтаксис docker compose (без дефиса)
+          docker compose up --build -d
           echo "Waiting for API to start..."
           sleep 60
           echo "Checking containers..."
@@ -173,5 +174,5 @@ jobs:
         run: |
           echo "Stopping API service..."
           cd api-service
-          docker-compose down || true
+          docker compose down || true
           echo "API service stopped"
