@@ -30,3 +30,51 @@ class TestCustomers:
 
     # Valid customer for add tests
     VALID_CUSTOMER = ("Harry", "Potter", "E725JB")
+
+
+# data.py - добавляем к существующему содержимому
+
+class ApiTestData:
+    """Тестовые данные для API тестов"""
+
+    VALID_ENTITY = {
+        "title": "Test Entity",
+        "description": "Test Description",
+        "value": 100,
+        "verified": True  # ДОБАВИТЬ
+    }
+
+    UPDATE_ENTITY = {
+        "title": "Updated Entity",
+        "description": "Updated Description",
+        "value": 200,
+        "verified": False  # ДОБАВИТЬ
+    }
+
+
+class ApiEndpoints:
+    """Эндпоинты API"""
+    BASE_URL = "http://localhost:8080/api"
+    CREATE_ENTITY = f"{BASE_URL}/create"
+    DELETE_ENTITY = f"{BASE_URL}/delete/{{id}}"
+    GET_ENTITY = f"{BASE_URL}/get/{{id}}"
+    GET_ALL_ENTITIES = f"{BASE_URL}/getAll"
+    UPDATE_ENTITY = f"{BASE_URL}/patch/{{id}}"
+
+
+class ApiResponseModels:
+    """Модели ответов API"""
+    ENTITY_LIST = "entity"
+class ApiTestData:
+    VALID_ENTITY = {
+        'title': 'Test Entity',
+        'description': 'Test Description', 
+        'value': 100,
+        'verified': True
+    }
+    UPDATE_ENTITY = {
+        'title': 'Updated Entity',
+        'description': 'Updated Description',
+        'value': 200,
+        'verified': False
+    }

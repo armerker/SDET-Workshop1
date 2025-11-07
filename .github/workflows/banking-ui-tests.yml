@@ -83,11 +83,21 @@ jobs:
           echo "=== Mapping test IDs to actual paths ==="
           
           if [ '${{ github.event.inputs.test_id }}' == "TC-001" ]; then
-            echo "tests/test_add_customer.py::TestAddCustomer::test_add_customer_with_valid_data" > test_path.txt
+            echo "all_tests/ui/test_add_customer.py::TestAddCustomer::test_add_customer_with_valid_data" > test_path.txt
           elif [ '${{ github.event.inputs.test_id }}' == "TC-002" ]; then
-            echo "tests/test_customer_sorting.py::TestCustomerSorting::test_sort_customers_by_first_name" > test_path.txt
+            echo "all_tests/ui/test_customer_sorting.py::TestCustomerSorting::test_sort_customers_by_first_name" > test_path.txt
           elif [ '${{ github.event.inputs.test_id }}' == "TC-003" ]; then
-            echo "tests/test_delete_customer.py::TestDeleteCustomer::test_delete_customer_closest_to_average_name_length" > test_path.txt
+            echo "all_tests/ui/test_delete_customer.py::TestDeleteCustomer::test_delete_customer_closest_to_average_name_length" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' == "TC-API-001" ]; then
+            echo "all_tests/api/test_create_entity.py::TestCreateEntity::test_create_entity" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' == "TC-API-002" ]; then
+            echo "all_tests/api/test_get_entity.py::TestGetEntity::test_get_entity" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' == "TC-API-003" ]; then
+            echo "all_tests/api/test_get_all_entities.py::TestGetAllEntities::test_get_all_entities" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' == "TC-API-004" ]; then
+            echo "all_tests/api/test_update_entity.py::TestUpdateEntity::test_update_entity" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' == "TC-API-005" ]; then
+            echo "all_tests/api/test_delete_entity.py::TestDeleteEntity::test_delete_entity" > test_path.txt
           else
             echo "Unknown test ID: ${{ github.event.inputs.test_id }}"
             exit 1
@@ -107,10 +117,10 @@ jobs:
         run: |
           if [ "$TEST_TYPE" == "ui" ]; then
             echo "Running UI tests with marker 'ui' in parallel"
-            python -m pytest tests/ -v -n 3 -m "ui" --alluredir=allure-results
+            python -m pytest all_tests/ -v -n 3 -m "ui" --alluredir=allure-results
           elif [ "$TEST_TYPE" == "api" ]; then
             echo "Running API tests with marker 'api' sequentially"
-            python -m pytest tests/ -v -m "api" --alluredir=allure-results
+            python -m pytest all_tests/ -v -m "api" --alluredir=allure-results
           elif [ "$TEST_TYPE" == "specific" ] && [ -n "$TEST_ID" ] && [ -n "$TEST_PATH" ]; then
             echo "Running test with ID: $TEST_ID"
             python -m pytest "$TEST_PATH" -v --alluredir=allure-results
@@ -119,7 +129,7 @@ jobs:
             python -m pytest "$TEST_NAME" -v --alluredir=allure-results
           else
             echo "Running all tests in parallel"
-            python -m pytest tests/ -v -n 3 --alluredir=allure-results
+            python -m pytest all_tests/ -v -n 3 --alluredir=allure-results
           fi
         env:
           TEST_TYPE: ${{ github.event.inputs.test_type || 'all' }}
