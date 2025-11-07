@@ -15,10 +15,9 @@ class TestGetEntity:
     def test_get_entity(self):
         # Создаем сущность
         create_data = EntityCreate(
-            title="Test Get Entity",
-            description="Test Description",
-            value=100,
-            verified=True
+            title="Тест получения сущности",
+            verified=True,
+            important_numbers=[1, 2, 3]
         )
         create_response = requests.post(
             ApiEndpoints.CREATE_ENTITY,
@@ -34,6 +33,8 @@ class TestGetEntity:
             timeout=5
         )
         assert get_response.status_code == 200, f"Get failed: {get_response.text}"
+
         retrieved_entity = get_response.json()
         assert retrieved_entity["id"] == created_id
         assert retrieved_entity["title"] == create_data.title
+        assert retrieved_entity["verified"] == create_data.verified

@@ -4,7 +4,6 @@ import requests
 from all_tests.api.models.entity_models import EntityCreate
 from data import ApiEndpoints
 
-
 @allure.feature("API Entity Management")
 @allure.story("Удаление сущности")
 class TestDeleteEntity:
@@ -15,9 +14,7 @@ class TestDeleteEntity:
     def test_delete_entity(self):
         # Создаем сущность
         create_data = EntityCreate(
-            title="Entity to Delete",
-            description="To be deleted",
-            value=100,
+            title="Сущность для удаления",
             verified=True
         )
         create_response = requests.post(
@@ -26,11 +23,11 @@ class TestDeleteEntity:
             timeout=5
         )
         assert create_response.status_code == 200, f"Create failed: {create_response.text}"
-        created_id = create_response.json()
+        entity_id = create_response.json()
 
         # Удаляем сущность
         delete_response = requests.delete(
-            ApiEndpoints.DELETE_ENTITY.format(id=created_id),
+            ApiEndpoints.DELETE_ENTITY.format(id=entity_id),
             timeout=5
         )
         # DELETE возвращает 204 (No Content)

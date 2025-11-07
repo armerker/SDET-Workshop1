@@ -32,23 +32,24 @@ class TestCustomers:
     VALID_CUSTOMER = ("Harry", "Potter", "E725JB")
 
 
-# data.py - добавляем к существующему содержимому
+
 
 class ApiTestData:
     """Тестовые данные для API тестов"""
 
     VALID_ENTITY = {
-        "title": "Test Entity",
-        "description": "Test Description",
-        "value": 100,
-        "verified": True  # ДОБАВИТЬ
+        "title": "Тестовая сущность",
+        "verified": True,
+        "important_numbers": [42, 87, 15],
+        "addition": {
+            "additional_info": "Дополнительные сведения",
+            "additional_number": 123
+        }
     }
 
-    UPDATE_ENTITY = {
-        "title": "Updated Entity",
-        "description": "Updated Description",
-        "value": 200,
-        "verified": False  # ДОБАВИТЬ
+    SIMPLE_ENTITY = {
+        "title": "Простая сущность",
+        "verified": False
     }
 
 
@@ -65,16 +66,3 @@ class ApiEndpoints:
 class ApiResponseModels:
     """Модели ответов API"""
     ENTITY_LIST = "entity"
-class ApiTestData:
-    VALID_ENTITY = {
-        'title': 'Test Entity',
-        'description': 'Test Description', 
-        'value': 100,
-        'verified': True
-    }
-    UPDATE_ENTITY = {
-        'title': 'Updated Entity',
-        'description': 'Updated Description',
-        'value': 200,
-        'verified': False
-    }
