@@ -70,11 +70,24 @@ jobs:
           pip install -r requirements.txt
           pip install pytest-xdist allure-pytest
 
-      - name: Install Chromium
-        if: ${{ github.event.inputs.test_type == 'ui' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'specific' || github.event_name == 'push' }}
+      - name: Install Docker and Chromium
         run: |
           sudo apt-get update
+          sudo apt-get install -y docker.io docker-compose
           sudo apt-get install -y chromium-browser chromium-chromedriver
+
+      - name: Start API Service
+        run: |
+          echo "Starting API service..."
+          cd ../api-service
+          docker-compose up --build -d
+          echo "Waiting for API to start..."
+          sleep 30
+          echo "Checking containers..."
+          docker ps
+          echo "Checking API health..."
+          curl -f http://localhost:8080/api/_/docs/swagger/ || echo "API might still be starting"
+          cd ../banking-ui-tests
 
       - name: Find test by ID
         if: github.event.inputs.test_type == 'specific' && github.event.inputs.test_id != ''
@@ -156,3 +169,11 @@ jobs:
           publish_branch: gh-pages
           publish_dir: allure-report
           force_orphan: true
+
+      - name: Stop API Service
+        if: always()
+        run: |
+          echo "Stopping API service..."
+          cd ../api-service
+          docker-compose down || true
+          echo "API service stopped"
