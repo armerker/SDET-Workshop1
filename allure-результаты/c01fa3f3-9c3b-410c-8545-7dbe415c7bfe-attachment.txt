@@ -1,0 +1,32 @@
+[31m[1mERROR   [0m all_tests.conftest:conftest.py:52 Webdriver-manager не сработал: [WinError 193] %1 не является приложением Win32
+[31m[1mERROR   [0m all_tests.conftest:conftest.py:99 Ошибка при загрузке страницы: Message: unknown error: net::ERR_CONNECTION_RESET
+  (Session info: chrome=142.0.7444.60)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7ff6dfa67a05
+	0x7ff6dfa67a60
+	0x7ff6df7e16ad
+	0x7ff6df7de1f8
+	0x7ff6df7ceb69
+	0x7ff6df7d0997
+	0x7ff6df7cf120
+	0x7ff6df7ce8d7
+	0x7ff6df7ce59b
+	0x7ff6df7cc105
+	0x7ff6df7cc99c
+	0x7ff6df7e59ba
+	0x7ff6df88c72e
+	0x7ff6df86297a
+	0x7ff6df88b8fb
+	0x7ff6df82b068
+	0x7ff6df82be93
+	0x7ff6dfd229a0
+	0x7ff6dfd1ce20
+	0x7ff6dfd3cc15
+	0x7ff6dfa8309e
+	0x7ff6dfa8ad8f
+	0x7ff6dfa70be4
+	0x7ff6dfa70d9f
+	0x7ff6dfa567f8
+	0x7fffa1fd7374
+	0x7fffa273cc91

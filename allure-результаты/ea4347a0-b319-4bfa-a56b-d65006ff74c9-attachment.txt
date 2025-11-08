@@ -1,0 +1,4 @@
+Names: ['Hermoine', 'Harry', 'Ron', 'Albus', 'Neville', 'John', 'Christopher', 'Alex', 'Michael']
+Lengths: [8, 5, 3, 5, 7, 4, 11, 4, 7]
+Average: 6.00
+To delete: Harry
