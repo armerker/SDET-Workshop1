@@ -1,0 +1,1 @@
+{"name": "Тест сортировки клиентов по имени в алфавитном порядке", "status": "skipped", "start": 1762645452861, "stop": 1762645452861, "uuid": "90bed713-5132-4e73-a298-10f32d8fc73d", "testCaseId": "1c59d6179ad774ab7cf3c9f8834443cc", "fullName": "all_tests.ui.test_customer_sorting.TestCustomerSorting#test_sort_customers_by_first_name"}
