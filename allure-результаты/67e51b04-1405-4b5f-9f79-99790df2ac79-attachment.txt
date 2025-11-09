@@ -1,1 +1,0 @@
-[31m[1mERROR   [0m all_tests.conftest:conftest.py:52 Webdriver-manager не сработал: [WinError 193] %1 не является приложением Win32

@@ -1,1 +1,0 @@
-PATCH возвращает SQL ошибку: {"error":"ERROR: syntax error at or near \"WHERE\" (SQLSTATE 42601)"}
