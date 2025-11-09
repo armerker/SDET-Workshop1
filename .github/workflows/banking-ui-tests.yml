@@ -6,7 +6,7 @@ on:
       - master
       - main
       - task_ui
-      -
+      - feature/api-tests
   workflow_dispatch:
     inputs:
       test_type:
