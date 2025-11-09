@@ -4,7 +4,7 @@ import requests
 from all_tests.api.models.entity_models import EntityCreate
 from data import ApiEndpoints
 
-
+# для пуша
 @allure.feature("API Entity Management")
 @allure.story("Обновление сущности")
 class TestUpdateEntity:
