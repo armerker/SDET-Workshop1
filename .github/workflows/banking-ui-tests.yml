@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 name: Banking UI Tests
 
 on:
@@ -8,6 +9,20 @@ on:
     inputs:
       test_type:
         description: 'What tests to run?'
+=======
+name: Banking Tests
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - task_ui
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Select test type to run'
+>>>>>>> develop
         required: true
         default: 'all'
         type: choice
@@ -15,6 +30,31 @@ on:
         - all
         - ui
         - api
+<<<<<<< HEAD
+=======
+        - specific
+      test_name:
+        description: 'Specific test name, class or file to run'
+        required: false
+        default: ''
+        type: string
+      test_id:
+        description: 'Test ID (like TC-001) to run'
+        required: false
+        default: ''
+        type: string
+      browser:
+        description: 'Browser for UI tests'
+        required: false
+        default: 'chromium'
+        type: choice
+        options:
+        - chromium
+        - firefox
+
+permissions:
+  contents: write
+>>>>>>> develop
 
 jobs:
   test:
@@ -28,17 +68,37 @@ jobs:
         with:
           python-version: '3.10'
 
+<<<<<<< HEAD
+=======
+      - name: Install Java (required for Allure)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jre
+
+      - name: Install Allure Commandline
+        run: |
+          sudo wget https://github.com/allure-framework/allure2/releases/download/2.24.0/allure-2.24.0.tgz
+          sudo tar -zxvf allure-2.24.0.tgz -C /opt/
+          sudo ln -s /opt/allure-2.24.0/bin/allure /usr/bin/allure
+          allure --version
+
+>>>>>>> develop
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+<<<<<<< HEAD
           pip install pytest-xdist
+=======
+          pip install pytest-xdist allure-pytest
+>>>>>>> develop
 
       - name: Install Chromium
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser chromium-chromedriver
 
+<<<<<<< HEAD
       - name: Run tests
         run: |
           echo "Running ${{ inputs.test_type }} tests"
@@ -61,9 +121,110 @@ jobs:
           keep_reports: true
 
       - name: Deploy Allure Report
+=======
+      - name: Clone and Start API Service
+        run: |
+          echo "Cloning API service..."
+          git clone https://github.com/bondarenkokate73/simbirsoft_sdet_project api-service
+          cd api-service
+          echo "Starting API service with Docker Compose..."
+          # Используем новый синтаксис docker compose (без дефиса)
+          docker compose up --build -d
+          echo "Waiting for API to start..."
+          sleep 60
+          echo "Checking containers..."
+          docker ps
+          echo "Checking API health..."
+          curl -f http://localhost:8080/health || curl -f http://localhost:8080/api/_/docs/swagger/ || echo "API health check failed but continuing..."
+          cd ..
+
+      - name: Find test by ID
+        if: github.event.inputs.test_type == 'specific' && github.event.inputs.test_id != ''
+        id: find_test
+        run: |
+          echo "=== Mapping test IDs to actual paths ==="
+          
+          if [ '${{ github.event.inputs.test_id }}' = "TC-001" ]; then
+            echo "all_tests/ui/test_add_customer.py::TestAddCustomer::test_add_customer_with_valid_data" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' = "TC-002" ]; then
+            echo "all_tests/ui/test_customer_sorting.py::TestCustomerSorting::test_sort_customers_by_first_name" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' = "TC-003" ]; then
+            echo "all_tests/ui/test_delete_customer.py::TestDeleteCustomer::test_delete_customer_closest_to_average_name_length" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' = "TC-API-001" ]; then
+            echo "all_tests/api/test_create_entity.py::TestCreateEntity::test_create_entity" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' = "TC-API-002" ]; then
+            echo "all_tests/api/test_get_entity.py::TestGetEntity::test_get_entity" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' = "TC-API-003" ]; then
+            echo "all_tests/api/test_get_all_entities.py::TestGetAllEntities::test_get_all_entities" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' = "TC-API-004" ]; then
+            echo "all_tests/api/test_update_entity.py::TestUpdateEntity::test_update_entity" > test_path.txt
+          elif [ '${{ github.event.inputs.test_id }}' = "TC-API-005" ]; then
+            echo "all_tests/api/test_delete_entity.py::TestDeleteEntity::test_delete_entity" > test_path.txt
+          else
+            echo "Unknown test ID: ${{ github.event.inputs.test_id }}"
+            exit 1
+          fi
+          
+          TEST_PATH=$(cat test_path.txt)
+          echo "Mapped to: $TEST_PATH"
+          echo "test_path=$TEST_PATH" >> $GITHUB_OUTPUT
+
+      - name: Run selected tests
+        run: |
+          TEST_TYPE="${{ github.event.inputs.test_type || 'all' }}"
+          TEST_NAME="${{ github.event.inputs.test_name || '' }}"
+          TEST_ID="${{ github.event.inputs.test_id || '' }}"
+          
+          echo "Test Type: $TEST_TYPE"
+          echo "Test Name: $TEST_NAME" 
+          echo "Test ID: $TEST_ID"
+          
+          if [ "$TEST_TYPE" = "ui" ]; then
+            echo "Running UI tests only"
+            python -m pytest all_tests/ui/ -v -n 3 --alluredir=allure-results
+          elif [ "$TEST_TYPE" = "api" ]; then
+            echo "Running API tests only"
+            python -m pytest all_tests/api/ -v --alluredir=allure-results
+          elif [ "$TEST_TYPE" = "specific" ] && [ -n "$TEST_ID" ]; then
+            echo "Running specific test by ID: $TEST_ID"
+            python -m pytest "${{ steps.find_test.outputs.test_path }}" -v --alluredir=allure-results
+          elif [ "$TEST_TYPE" = "specific" ] && [ -n "$TEST_NAME" ]; then
+            echo "Running specific test: $TEST_NAME"
+            python -m pytest "$TEST_NAME" -v --alluredir=allure-results
+          else
+            echo "Running ALL tests (UI + API)"
+            python -m pytest all_tests/ -v -n 3 --alluredir=allure-results
+          fi
+
+      - name: List allure results
+        if: always()
+        run: |
+          echo "Allure results content:"
+          ls -la allure-results/ || echo "No allure-results directory"
+
+      - name: Generate Allure Report
+        if: always()
+        run: |
+          allure generate allure-results -o allure-report --clean
+
+      - name: Deploy Allure Report to GitHub Pages
+>>>>>>> develop
         uses: peaceiris/actions-gh-pages@v3
         if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
+<<<<<<< HEAD
           publish_dir: allure-report
+=======
+          publish_dir: allure-report
+          force_orphan: true
+
+      - name: Stop API Service
+        if: always()
+        run: |
+          echo "Stopping API service..."
+          cd api-service
+          docker compose down || true
+          echo "API service stopped"
+>>>>>>> develop
