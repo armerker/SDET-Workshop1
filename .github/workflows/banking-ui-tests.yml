@@ -6,6 +6,7 @@ on:
       - master
       - main
       - task_ui
+      -
   workflow_dispatch:
     inputs:
       test_type:
