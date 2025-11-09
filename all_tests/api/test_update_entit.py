@@ -3,52 +3,94 @@ import allure
 import requests
 from all_tests.api.models.entity_models import EntityCreate
 from data import ApiEndpoints
+from all_tests.api.utils.assert_utils import assert_utils
 
 
 @allure.feature("API Entity Management")
-@allure.story("Обновление сущности")
-class TestUpdateEntity:
+@allure.story("Удаление сущности")
+class TestDeleteEntity:
 
-    @pytest.mark.api
-    @allure.title("Тест обновления сущности")
-    @allure.testcase("TC-API-004")
-    def test_update_entity(self):
-        # Создаем сущность для обновления
+    def _create_test_entity(self):
+        """Вспомогательный метод для создания тестовой сущности"""
         create_data = EntityCreate(
-            title="Исходный заголовок",
-            verified=False,
-            important_numbers=[10, 20, 30]
+            title="Сущность для удаления",
+            verified=True,
+            important_numbers=[100, 200, 300]
         )
-
         create_response = requests.post(
             ApiEndpoints.CREATE_ENTITY,
             json=create_data.model_dump(),
             timeout=5
         )
-        assert create_response.status_code == 200, f"Create failed: {create_response.text}"
-        entity_id = create_response.json()
-
-        # Обновляем сущность
-        update_data = {
-            "title": "Обновленный заголовок",
-            "verified": True,
-            "important_numbers": [99, 88, 77],
-            "addition": {
-                "additional_info": "Обновленная информация",
-                "additional_number": 999
-            }
-        }
-
-        update_response = requests.patch(
-            ApiEndpoints.UPDATE_ENTITY.format(id=entity_id),
-            json=update_data,
-            timeout=5
+        assert_utils.assert_status_code(
+            create_response.status_code,
+            200,
+            "создания тестовой сущности"
         )
+        return create_response.json()
 
-        # PATCH может возвращать 200 или 204
-        assert update_response.status_code in [200, 204], f"PATCH failed: {update_response.text}"
+    @pytest.mark.api
+    @allure.title("Комплексный тест удаления сущности")
+    @allure.testcase("TC-API-005")
+    def test_delete_and_verify_entity_removal(self):
+        """
+        Комплексный тест:
+        1. Создание сущности для удаления
+        2. Удаление сущности
+        3. Проверка, что сущность недоступна по ID
+        4. Проверка отсутствия сущности в общем списке
+        """
+        with allure.step("1. Создание сущности для удаления"):
+            entity_id = self._create_test_entity()
+            assert_utils.assert_type(entity_id, int, "ID сущности")
+            assert_utils.assert_positive(entity_id, "ID сущности")
 
-        # Если вернулся контент - проверяем его
-        if update_response.status_code == 200:
-            updated_entity = update_response.json()
-            assert updated_entity["title"] == "Обновленный заголовок"
+        with allure.step("2. Удаление сущности"):
+            delete_response = requests.delete(
+                ApiEndpoints.DELETE_ENTITY.format(id=str(entity_id)),  # ID как string
+                timeout=5
+            )
+
+            assert_utils.assert_status_code(
+                delete_response.status_code,
+                204,
+                "удаления сущности"
+            )
+
+        with allure.step("3. Проверка, что сущность недоступна по ID"):
+            get_response = requests.get(
+                ApiEndpoints.GET_ENTITY.format(id=str(entity_id)),  # ID как string
+                timeout=5
+            )
+
+            # Ожидаем ошибку при попытке получить удаленную сущность
+            assert_utils.assert_status_code_in(
+                get_response.status_code,
+                [404, 400, 500],
+                "получения удаленной сущности"
+            )
+
+        with allure.step("4. Проверка отсутствия сущности в общем списке"):
+            # ИСПРАВЛЕНО: POST запрос для getAll
+            list_response = requests.post(
+                ApiEndpoints.GET_ALL_ENTITIES,
+                timeout=5
+            )
+
+            assert_utils.assert_status_code(
+                list_response.status_code,
+                200,
+                "получения списка сущностей"
+            )
+
+            response_data = list_response.json()
+            assert_utils.assert_field_exists(response_data, "entity", "ответе")
+
+            # Проверяем, что удаленной сущности нет в списке
+            entity_list = response_data["entity"]
+            entity_ids = [entity["id"] for entity in entity_list if "id" in entity]
+            assert_utils.assert_not_in_list(
+                entity_id,
+                entity_ids,
+                "в списке сущностей"
+            )
