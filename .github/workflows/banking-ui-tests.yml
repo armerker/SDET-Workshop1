@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-name: Banking UI Tests
-
-on:
-  push:
-    branches: [main, master, task_ui]
-
-  workflow_dispatch:
-    inputs:
-      test_type:
-        description: 'What tests to run?'
-=======
 name: Banking Tests
 
 on:
@@ -22,7 +10,6 @@ on:
     inputs:
       test_type:
         description: 'Select test type to run'
->>>>>>> develop
         required: true
         default: 'all'
         type: choice
@@ -30,8 +17,6 @@ on:
         - all
         - ui
         - api
-<<<<<<< HEAD
-=======
         - specific
       test_name:
         description: 'Specific test name, class or file to run'
@@ -54,7 +39,6 @@ on:
 
 permissions:
   contents: write
->>>>>>> develop
 
 jobs:
   test:
@@ -68,8 +52,6 @@ jobs:
         with:
           python-version: '3.10'
 
-<<<<<<< HEAD
-=======
       - name: Install Java (required for Allure)
         run: |
           sudo apt-get update
@@ -82,46 +64,17 @@ jobs:
           sudo ln -s /opt/allure-2.24.0/bin/allure /usr/bin/allure
           allure --version
 
->>>>>>> develop
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-<<<<<<< HEAD
-          pip install pytest-xdist
-=======
           pip install pytest-xdist allure-pytest
->>>>>>> develop
 
       - name: Install Chromium
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser chromium-chromedriver
 
-<<<<<<< HEAD
-      - name: Run tests
-        run: |
-          echo "Running ${{ inputs.test_type }} tests"
-          python -m pytest tests/ -v -n 3 --alluredir=allure-results
-
-      - name: Get Allure history
-        uses: actions/checkout@v4
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Build Allure Report
-        uses: simple-elf/allure-report-action@master
-        if: always()
-        with:
-          allure_results: allure-results
-          allure_report: allure-report
-          keep_reports: true
-
-      - name: Deploy Allure Report
-=======
       - name: Clone and Start API Service
         run: |
           echo "Cloning API service..."
@@ -208,15 +161,11 @@ jobs:
           allure generate allure-results -o allure-report --clean
 
       - name: Deploy Allure Report to GitHub Pages
->>>>>>> develop
         uses: peaceiris/actions-gh-pages@v3
         if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-<<<<<<< HEAD
-          publish_dir: allure-report
-=======
           publish_dir: allure-report
           force_orphan: true
 
@@ -227,4 +176,3 @@ jobs:
           cd api-service
           docker compose down || true
           echo "API service stopped"
->>>>>>> develop
