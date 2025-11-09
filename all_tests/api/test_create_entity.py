@@ -49,7 +49,7 @@ class TestCreateEntity:
 
         with allure.step("2. Проверка получения сущности по ID"):
             get_response = requests.get(
-                ApiEndpoints.GET_ENTITY.format(id=created_id),
+                ApiEndpoints.GET_ENTITY.format(id=str(created_id)),  # ID как string
                 timeout=5
             )
 
@@ -77,7 +77,8 @@ class TestCreateEntity:
             )
 
         with allure.step("3. Проверка наличия сущности в общем списке"):
-            list_response = requests.get(
+            # ИСПРАВЛЕНО: POST запрос для getAll
+            list_response = requests.post(
                 ApiEndpoints.GET_ALL_ENTITIES,
                 timeout=5
             )
@@ -94,7 +95,8 @@ class TestCreateEntity:
             assert_utils.assert_type(response_data["entity"], list, "поле entity")
 
             # Проверяем, что созданная сущность есть в списке
-            entity_ids = [entity["id"] for entity in response_data["entity"] if "id" in entity]
+            entity_list = response_data["entity"]
+            entity_ids = [entity["id"] for entity in entity_list if "id" in entity]
             assert_utils.assert_in_list(
                 created_id,
                 entity_ids,
