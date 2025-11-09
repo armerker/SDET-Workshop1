@@ -1,24 +1,6 @@
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-<<<<<<< HEAD
-
-class BasePage:
-    def __init__(self, driver):
-        self.driver = driver
-        self.wait = WebDriverWait(driver, 10)
-
-    def find_element(self, locator):
-        return self.wait.until(EC.presence_of_element_located(locator))
-
-    def find_elements(self, locator):
-        return self.wait.until(EC.presence_of_all_elements_located(locator))
-
-    def click(self, locator):
-        self.wait.until(EC.element_to_be_clickable(locator)).click()
-
-    def send_keys(self, locator, text):
-=======
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from typing import List, Tuple, Any, Optional
@@ -94,14 +76,10 @@ class BasePage:
         Raises:
             TimeoutException: Если элемент не становится кликабельным в течение таймаута.
         """
->>>>>>> develop
         element = self.wait.until(EC.element_to_be_clickable(locator))
         element.clear()
         element.send_keys(text)
 
-<<<<<<< HEAD
-    def get_alert_text(self):
-=======
     def get_alert_text(self) -> Optional[str]:
         """Ожидает появление alert, получает его текст и подтверждает.
 
@@ -111,7 +89,6 @@ class BasePage:
         Raises:
             TimeoutException: Если alert не появляется в течение таймаута.
         """
->>>>>>> develop
         try:
             alert = self.wait.until(EC.alert_is_present())
             text = alert.text
@@ -120,9 +97,6 @@ class BasePage:
         except TimeoutException:
             return None
 
-<<<<<<< HEAD
-    def is_element_present(self, locator):
-=======
     def is_element_present(self, locator: Tuple[str, str]) -> bool:
         """Проверяет наличие элемента на странице без выброса исключения.
 
@@ -132,14 +106,10 @@ class BasePage:
         Returns:
             True если элемент присутствует, False в противном случае.
         """
->>>>>>> develop
         try:
             self.find_element(locator)
             return True
         except TimeoutException:
-<<<<<<< HEAD
-            return False
-=======
             return False
 
     def wait_for_alert(self, timeout: int = 10) -> Any:
@@ -156,4 +126,3 @@ class BasePage:
         """
         wait = WebDriverWait(self.driver, timeout)
         return wait.until(EC.alert_is_present())
->>>>>>> develop

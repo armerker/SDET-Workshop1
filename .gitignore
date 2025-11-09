@@ -1,23 +1,11 @@
 ﻿# Virtual environment
 .venv/
 venv/
-<<<<<<< HEAD
-=======
 env/
->>>>>>> develop
 
 # Allure results
 allure-results/
 allure-report/
-<<<<<<< HEAD
-
-# pytest cache
-.pytest_cache/
-.cache
-
-# HTML reports
-report.html
-=======
 allure-результаты/
 
 # pytest cache
@@ -28,15 +16,12 @@ allure-результаты/
 # HTML reports
 report.html
 *.html
->>>>>>> develop
 
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-<<<<<<< HEAD
-=======
 *.so
 .Python
 pip-log.txt
@@ -50,24 +35,18 @@ build/
 
 # Jupyter Notebook
 .ipynb_checkpoints
->>>>>>> develop
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-<<<<<<< HEAD
-=======
 *.sublime-project
 *.sublime-workspace
->>>>>>> develop
 
 # OS
 .DS_Store
 Thumbs.db
-<<<<<<< HEAD
-=======
 desktop.ini
 
 # Logs
@@ -77,4 +56,3 @@ logs/
 # ChromeDriver (если скачиваете вручную)
 chromedriver*
 geckodriver*
->>>>>>> develop
