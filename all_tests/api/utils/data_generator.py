@@ -1,6 +1,6 @@
 from faker import Faker
 from typing import List, Optional
-from all_tests.api.models.entity_models import EntityCreate, EntityUpdate, AdditionRequest
+from all_tests.api.models.entity_model import EntityCreate, EntityUpdate, AdditionRequest
 
 
 class DataGenerator:

@@ -1,7 +1,7 @@
 import pytest
 import allure
-from all_tests.api.models.entity_models import EntityCreate
-from all_tests.api.models.response_model import EntityResponse, EntityListResponse
+from all_tests.api.models.entity_model import EntityCreate
+from all_tests.api.models.response_models import EntityResponse, EntityListResponse
 from all_tests.api.utils.assert_utils import assert_utils
 
 

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
-from .entity_models import AdditionResponse
+from .entity_model import AdditionResponse
 
 
 class EntityResponse(BaseModel):

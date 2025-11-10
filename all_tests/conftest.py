@@ -12,8 +12,8 @@ import allure
 from data import URLs, TestCustomers
 from all_tests.api.clients.api_client import APIClient
 from all_tests.api.utils.data_generator import DataGenerator
-from all_tests.api.models.entity_models import EntityCreate
-from all_tests.api.models.response_model import CreateEntityResponse, EntityResponse
+from all_tests.api.models.entity_model import EntityCreate
+from all_tests.api.models.response_models import CreateEntityResponse, EntityResponse
 
 # Настройка логирования
 logging.getLogger('selenium').setLevel(logging.ERROR)
