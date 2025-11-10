@@ -14,14 +14,20 @@ class TestUpdateEntity:
     @allure.testcase("TC-API-004")
     def test_update_and_verify_entity(self, api_client, entity_for_update):
         """
-        Комплексный тест с использованием фикстур:
-        1. Создание сущности для обновления (через фикстуру entity_for_update)
-        2. Обновление сущности
-        3. Проверка обновленных данных
+        Предусловия:
+        - Создана тестовая сущность для обновления (через фикстуру entity_for_update)
+
+        Шаги:
+        1. Обновить сущность
+        2. Проверить обновленные данные
+        3. Проверить сохранение изменений при повторном получении
+
+        Постусловия:
+        - Удалить тестовые данные (автоматически через фикстуру)
         """
         entity_id = entity_for_update
 
-        with allure.step("2. Обновление сущности"):
+        with allure.step("1. Обновление сущности"):
             update_data = EntityUpdate(
                 title="Обновленное название",
                 verified=True,
@@ -42,7 +48,7 @@ class TestUpdateEntity:
             assert_utils.assert_equal(updated_entity.title, update_data.title, "title после обновления")
             assert_utils.assert_equal(updated_entity.verified, update_data.verified, "verified после обновления")
 
-        with allure.step("3. Проверка что обновления сохранились при повторном получении"):
+        with allure.step("2. Проверка что обновления сохранились при повторном получении"):
             retrieved_entity = api_client.get(
                 f"get/{entity_id}",
                 EntityResponse

@@ -14,14 +14,19 @@ class TestCreateEntity:
     @allure.testcase("TC-API-001")
     def test_create_and_verify_entity(self, api_client, test_entity):
         """
-        Комплексный тест с использованием фикстур:
-        1. Создание сущности (через фикстуру test_entity)
-        2. Проверка получения по ID
-        3. Проверка наличия в общем списке
+        Предусловия:
+        - Создана тестовая сущность (через фикстуру test_entity)
+
+        Шаги:
+        1. Проверить получение сущности по ID
+        2. Проверить наличие сущности в общем списке
+
+        Постусловия:
+        - Удалить тестовые данные (автоматически через фикстуру)
         """
         entity_id = test_entity
 
-        with allure.step("2. Проверка получения сущности по ID"):
+        with allure.step("1. Проверка получения сущности по ID"):
             retrieved_entity = api_client.get(
                 f"get/{entity_id}",
                 EntityResponse
@@ -34,7 +39,7 @@ class TestCreateEntity:
             )
             assert_utils.assert_type(retrieved_entity.title, str, "title")
 
-        with allure.step("3. Проверка наличия сущности в общем списке"):
+        with allure.step("2. Проверка наличия сущности в общем списке"):
             list_response = api_client.post(
                 "getAll",
                 EntityCreate(title="dummy"),
