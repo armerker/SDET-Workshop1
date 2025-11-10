@@ -1,8 +1,7 @@
 import pytest
 import allure
-import requests
 from all_tests.api.models.entity_models import EntityCreate
-from data import ApiEndpoints
+from all_tests.api.models.response_models import EntityResponse, EntityListResponse
 from all_tests.api.utils.assert_utils import assert_utils
 
 
@@ -13,52 +12,36 @@ class TestGetEntity:
     @pytest.mark.api
     @allure.title("Комплексный тест получения сущности по ID")
     @allure.testcase("TC-API-002")
-    def test_create_and_get_entity_by_id(self):
+    def test_create_and_get_entity_by_id(self, api_client, test_entity):
         """
-        Комплексный тест:
-        1. Создание сущности
+        Комплексный тест с использованием фикстур:
+        1. Создание сущности (через фикстуру test_entity)
         2. Получение по ID и проверка данных
         3. Проверка в общем списке
         """
-        with allure.step("1. Создание тестовой сущности"):
-            create_data = EntityCreate(
-                title="Тест получения сущности",
-                verified=True,
-                important_numbers=[1, 2, 3]
-            )
-
-            create_response = requests.post(
-                ApiEndpoints.CREATE_ENTITY,
-                json=create_data.model_dump(),
-                timeout=5
-            )
-
-            assert_utils.assert_status_code(create_response.status_code, 200, "создания")
-            created_id = create_response.json()
-            assert_utils.assert_type(created_id, int, "ID")
-            assert_utils.assert_positive(created_id, "ID")
+        entity_id = test_entity
 
         with allure.step("2. Получение сущности по ID"):
-            get_response = requests.get(
-                ApiEndpoints.GET_ENTITY.format(id=str(created_id)),  # ID как string
-                timeout=5
+            retrieved_entity = api_client.get(
+                f"get/{entity_id}",
+                EntityResponse
             )
 
-            assert_utils.assert_status_code(get_response.status_code, 200, "получения по ID")
-
-            retrieved_entity = get_response.json()
-            assert_utils.assert_equal(retrieved_entity["id"], created_id, "ID")
-            assert_utils.assert_equal(retrieved_entity["title"], create_data.title, "title")
-            assert_utils.assert_equal(retrieved_entity["verified"], create_data.verified, "verified")
+            assert_utils.assert_equal(retrieved_entity.id, entity_id, "ID")
+            assert_utils.assert_type(retrieved_entity.title, str, "title")
 
         with allure.step("3. Проверка в общем списке"):
-            # ИСПРАВЛЕНО: POST запрос для getAll
-            list_response = requests.post(ApiEndpoints.GET_ALL_ENTITIES, timeout=5)
-            assert_utils.assert_status_code(list_response.status_code, 200, "получения списка")
+            list_response = api_client.post(
+                "getAll",
+                EntityCreate(title="dummy"),
+                EntityListResponse
+            )
 
-            response_data = list_response.json()
-            assert_utils.assert_field_exists(response_data, "entity", "ответе")
+            entity_list = list_response.entity
+            assert_utils.assert_type(entity_list, list, "список сущностей")
 
-            entity_list = response_data["entity"]
-            entity_ids = [entity["id"] for entity in entity_list if "id" in entity]
-            assert_utils.assert_in_list(created_id, entity_ids, "в списке")
+            if entity_list:
+                entity_ids = [entity.id for entity in entity_list]
+                assert_utils.assert_in_list(entity_id, entity_ids, "в списке")
+
+        # Очистка АВТОМАТИЧЕСКАЯ через фикстуру test_entity

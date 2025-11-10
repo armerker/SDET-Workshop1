@@ -2,6 +2,7 @@
 import logging
 import platform
 import os
+from typing import Generator, List
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -9,13 +10,19 @@ from webdriver_manager.chrome import ChromeDriverManager
 import allure
 
 from data import URLs, TestCustomers
+from all_tests.api.clients.api_client import APIClient
+from all_tests.api.utils.data_generator import DataGenerator
+from all_tests.api.models.entity_models import EntityCreate
+from all_tests.api.models.response_models import CreateEntityResponse, EntityResponse
 
+# Настройка логирования
 logging.getLogger('selenium').setLevel(logging.ERROR)
 logging.getLogger('urllib3').setLevel(logging.ERROR)
 logging.getLogger('webdriver_manager').setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
 
+# ==================== UI ФИКСТУРЫ (SELENIUM) ====================
 
 def get_chrome_options():
     """Создает настройки Chrome для разных ОС"""
@@ -146,6 +153,170 @@ def setup_delete_test(manager_page, customers_page):
         return manager_page, customers_page
 
     return _setup
+
+
+# ==================== API ФИКСТУРЫ ====================
+
+@pytest.fixture(scope="session")
+def api_client() -> APIClient:
+    """Фикстура для API клиента (на всю сессию)"""
+    client = APIClient()
+    logger.info("API клиент инициализирован")
+    return client
+
+
+@pytest.fixture(scope="session")
+def data_generator() -> DataGenerator:
+    """Фикстура для генератора данных (на всю сессию)"""
+    generator = DataGenerator()
+    logger.info("Генератор данных инициализирован")
+    return generator
+
+
+@pytest.fixture
+def random_entity_data(data_generator: DataGenerator) -> EntityCreate:
+    """Фикстура для случайных данных сущности"""
+    return data_generator.generate_entity_create_data()
+
+
+@pytest.fixture
+def simple_entity_data(data_generator: DataGenerator) -> EntityCreate:
+    """Фикстура для простых данных сущности (без дополнений)"""
+    return data_generator.generate_entity_create_data(
+        title="Тестовая сущность",
+        verified=True,
+        with_addition=False
+    )
+
+
+@pytest.fixture
+def entity_with_addition_data(data_generator: DataGenerator) -> EntityCreate:
+    """Фикстура для данных сущности с дополнительной информацией"""
+    return data_generator.generate_entity_create_data(
+        title="Сущность с дополнением",
+        verified=False,
+        with_addition=True
+    )
+
+
+@pytest.fixture
+def test_entity(api_client: APIClient, random_entity_data: EntityCreate) -> Generator[int, None, None]:
+    with allure.step("Создание тестовой сущности через фикстуру"):
+        create_response = api_client.post(
+            "create",
+            random_entity_data,
+            CreateEntityResponse
+        )
+        entity_id = create_response.id  # ← Теперь берем .id из объекта
+
+    yield entity_id
+
+    # Пост-очистка: удаляем созданную сущность
+    with allure.step("Очистка: удаление тестовой сущности"):
+        try:
+            api_client.delete(f"delete/{entity_id}")
+            logger.info(f"Удалена тестовая сущность ID: {entity_id}")
+        except Exception as e:
+            logger.warning(f"Ошибка при удалении сущности {entity_id}: {e}")
+
+
+@pytest.fixture
+def multiple_test_entities(api_client: APIClient, data_generator: DataGenerator) -> Generator[List[int], None, None]:
+    """
+    Фикстура для создания нескольких тестовых сущностей
+
+    Returns:
+        List[int]: Список ID созданных сущностей
+    """
+    entities_data = data_generator.generate_multiple_entities(count=3)
+    created_ids = []
+
+    with allure.step("Создание нескольких тестовых сущностей через фикстуру"):
+        for i, entity_data in enumerate(entities_data):
+            create_response = api_client.post(
+                "create",
+                entity_data,
+                CreateEntityResponse
+            )
+            created_ids.append(create_response.id)
+            logger.info(f"Создана сущность {i+1}/3 ID: {create_response.id}")
+
+    yield created_ids
+
+    # Пост-очистка: удаляем все созданные сущности
+    with allure.step("Очистка: удаление нескольких тестовых сущностей"):
+        for entity_id in created_ids:
+            try:
+                api_client.delete(f"delete/{entity_id}")
+                logger.info(f"Удалена сущность ID: {entity_id}")
+            except Exception as e:
+                logger.warning(f"Ошибка при удалении сущности {entity_id}: {e}")
+
+
+@pytest.fixture
+def entity_for_update(api_client: APIClient, data_generator: DataGenerator) -> Generator[int, None, None]:
+    """
+    Фикстура для сущности, предназначенной для тестов обновления
+
+    Returns:
+        int: ID созданной сущности
+    """
+    entity_data = data_generator.generate_entity_create_data(
+        title="Сущность для обновления",
+        verified=False
+    )
+
+    create_response = api_client.post(
+        "create",
+        entity_data,
+        CreateEntityResponse
+    )
+    entity_id = create_response.id
+    logger.info(f"Создана сущность для обновления ID: {entity_id}")
+
+    yield entity_id
+
+    try:
+        api_client.delete(f"delete/{entity_id}")
+        logger.info(f"Удалена сущность для обновления ID: {entity_id}")
+    except Exception as e:
+        logger.warning(f"Ошибка при удалении сущности для обновления {entity_id}: {e}")
+
+
+@pytest.fixture
+def entity_for_deletion(api_client: APIClient, data_generator: DataGenerator) -> int:
+    """
+    Фикстура для сущности, предназначенной для тестов удаления
+    (без очистки, так как тест сам удаляет сущность)
+
+    Returns:
+        int: ID созданной сущности
+    """
+    entity_data = data_generator.generate_entity_create_data(
+        title="Сущность для удаления",
+        verified=True
+    )
+
+    create_response = api_client.post(
+        "create",
+        entity_data,
+        CreateEntityResponse
+    )
+    entity_id = create_response.id
+    logger.info(f"Создана сущность для удаления ID: {entity_id}")
+
+    return entity_id
+
+
+# ==================== ОБЩИЕ ФИКСТУРЫ ====================
+
+@pytest.fixture(autouse=True)
+def log_test_start(request):
+    """Автоматическая фикстура для логирования начала теста"""
+    test_name = request.node.name
+    logger.info(f"=== Начало теста: {test_name} ===")
+    yield
+    logger.info(f"=== Конец теста: {test_name} ===")
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

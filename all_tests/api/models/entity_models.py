@@ -1,10 +1,17 @@
 from pydantic import BaseModel
 from typing import Optional, List
 
+
 class AdditionRequest(BaseModel):
-    """Дополнительная информация о сущности"""
+    """Дополнительная информация о сущности (запрос)"""
     additional_info: Optional[str] = None
     additional_number: Optional[int] = None
+
+
+class AdditionResponse(AdditionRequest):
+    """Дополнительная информация о сущности (ответ)"""
+    id: int
+
 
 class EntityCreate(BaseModel):
     """Модель для создания сущности"""
@@ -13,13 +20,10 @@ class EntityCreate(BaseModel):
     important_numbers: Optional[List[int]] = None
     addition: Optional[AdditionRequest] = None
 
-class AdditionResponse(AdditionRequest):
-    id: int
 
-class EntityResponse(BaseModel):
-    """Модель ответа API для сущности"""
-    id: int
-    title: str
+class EntityUpdate(BaseModel):
+    """Модель для обновления сущности"""
+    title: Optional[str] = None
     verified: Optional[bool] = None
     important_numbers: Optional[List[int]] = None
-    addition: Optional[AdditionResponse] = None
+    addition: Optional[AdditionRequest] = None
