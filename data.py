@@ -51,6 +51,15 @@ class ApiTestData:
         "title": "Простая сущность",
         "verified": False
     }
+    UPDATE_ENTITY = {
+        "title": "Обновленная сущность",
+        "verified": True,
+        "important_numbers": [99, 88, 77],
+        "addition": {
+            "additional_info": "Обновленная информация",
+            "additional_number": 999
+        }
+    }
 
 
 class ApiEndpoints:
