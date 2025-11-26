@@ -1,0 +1,22 @@
+ERROR    all_tests.conftest:conftest.py:59 Webdriver-manager не сработал: [Errno 8] Exec format error: '/home/runner/.wdm/gw1/drivers/chromedriver/linux64/142.0.7444.175/chromedriver-linux64/THIRD_PARTY_NOTICES.chromedriver'
+ERROR    all_tests.conftest:conftest.py:67 Системный Chrome не сработал: Message: session not created
+from unknown error: no chrome binary at /usr/bin/google-chrome
+Stacktrace:
+#0 0x55e0b842938a <unknown>
+#1 0x55e0b7ee3b0b <unknown>
+#2 0x55e0b7f1bb16 <unknown>
+#3 0x55e0b7f1a889 <unknown>
+#4 0x55e0b7f69986 <unknown>
+#5 0x55e0b7f69106 <unknown>
+#6 0x55e0b7f27aaf <unknown>
+#7 0x55e0b7f287b1 <unknown>
+#8 0x55e0b83f30ef <unknown>
+#9 0x55e0b83f61c2 <unknown>
+#10 0x55e0b83dc3a3 <unknown>
+#11 0x55e0b83f6997 <unknown>
+#12 0x55e0b83c5ade <unknown>
+#13 0x55e0b84174e8 <unknown>
+#14 0x55e0b8417704 <unknown>
+#15 0x55e0b842815c <unknown>
+#16 0x7fd326bd3aa4 <unknown>
+#17 0x7fd326c60c6c <unknown>
